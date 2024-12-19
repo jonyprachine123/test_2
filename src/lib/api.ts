@@ -35,5 +35,3 @@ export const endpoints = {
     delete: (id: string) => `${API_BASE_URL}/reviews/${id}`,
   },
 };
-
-export default endpoints;

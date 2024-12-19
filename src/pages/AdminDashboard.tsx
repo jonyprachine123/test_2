@@ -9,7 +9,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { Label } from "@/components/ui/label";
 import AdminReviews from "@/components/AdminReviews";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
-import { endpoints } from "@/api";
+import { endpoints } from "@/lib/api";
 
 export default function AdminDashboard() {
   const { isAuthenticated, logout } = useAdmin();
