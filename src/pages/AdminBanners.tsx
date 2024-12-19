@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { Trash2 } from "lucide-react";
 import { useRef } from "react";
-import { endpoints } from "@/config/api.ts";
+import { endpoints } from "@/config/api";
 
 interface Banner {
   id: number;

@@ -5,7 +5,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import Reviews from "@/components/Reviews";
-import { endpoints } from "@/config/api.ts";
+import { endpoints } from "@/config/api";
 
 const Home = () => {
   const { toast } = useToast();

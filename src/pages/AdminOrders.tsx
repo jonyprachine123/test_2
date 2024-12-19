@@ -26,7 +26,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { endpoints } from "@/config/api.ts";
+import { endpoints } from "@/config/api";
 
 interface Order {
   id: string;
