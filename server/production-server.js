@@ -3,37 +3,17 @@ import cors from 'cors';
 import multer from 'multer';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import fs from 'fs';
+import { config } from './config.js';
+import db from './db.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
 
-// In-memory store for production
-let inMemoryDB = {
-  products: [],
-  orders: [],
-  banners: [],
-  reviews: []
-};
-
-// Load initial data
-try {
-  const initialData = {
-    products: [],
-    orders: [],
-    banners: [],
-    reviews: []
-  };
-  inMemoryDB = initialData;
-} catch (err) {
-  console.error('Error loading initial data:', err);
-}
-
 // Middleware
 app.use(cors({
-  origin: '*',
+  origin: config.corsOrigin,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
@@ -51,27 +31,28 @@ const upload = multer({
 });
 
 // API Routes
-app.get('/api/products', (req, res) => {
-  res.json(inMemoryDB.products);
+app.get('/api/products', async (req, res) => {
+  try {
+    const products = await db.all('SELECT * FROM products ORDER BY createdAt DESC');
+    res.json(products);
+  } catch (error) {
+    console.error('Error fetching products:', error);
+    res.status(500).json({ error: 'Failed to fetch products' });
+  }
 });
 
-app.post('/api/products', upload.single('image'), (req, res) => {
+app.post('/api/products', upload.single('image'), async (req, res) => {
   try {
     const { title, description, price, discount } = req.body;
-    const features = JSON.parse(req.body.features || '[]');
-    
-    const newProduct = {
-      id: Date.now(),
-      title,
-      description,
-      price: parseFloat(price),
-      discount: parseFloat(discount),
-      features,
-      image: req.file ? `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}` : null,
-      createdAt: new Date().toISOString()
-    };
-    
-    inMemoryDB.products.push(newProduct);
+    const features = JSON.stringify(JSON.parse(req.body.features || '[]'));
+    const image = req.file ? `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}` : null;
+
+    const result = await db.run(
+      'INSERT INTO products (title, description, price, discount, features, image) VALUES (?, ?, ?, ?, ?, ?)',
+      [title, description, parseFloat(price), parseFloat(discount), features, image]
+    );
+
+    const newProduct = await db.get('SELECT * FROM products WHERE id = ?', [result.lastID]);
     res.status(201).json(newProduct);
   } catch (error) {
     console.error('Error creating product:', error);
@@ -79,27 +60,26 @@ app.post('/api/products', upload.single('image'), (req, res) => {
   }
 });
 
-app.get('/api/orders', (req, res) => {
-  res.json(inMemoryDB.orders);
+app.get('/api/orders', async (req, res) => {
+  try {
+    const orders = await db.all('SELECT * FROM orders ORDER BY createdAt DESC');
+    res.json(orders);
+  } catch (error) {
+    console.error('Error fetching orders:', error);
+    res.status(500).json({ error: 'Failed to fetch orders' });
+  }
 });
 
-app.post('/api/orders', (req, res) => {
+app.post('/api/orders', async (req, res) => {
   try {
     const { customerName, email, phone, address, productId, quantity } = req.body;
-    
-    const newOrder = {
-      id: Date.now(),
-      customerName,
-      email,
-      phone,
-      address,
-      productId,
-      quantity: parseInt(quantity),
-      status: 'pending',
-      createdAt: new Date().toISOString()
-    };
-    
-    inMemoryDB.orders.push(newOrder);
+
+    const result = await db.run(
+      'INSERT INTO orders (customerName, email, phone, address, productId, quantity) VALUES (?, ?, ?, ?, ?, ?)',
+      [customerName, email, phone, address, productId, parseInt(quantity)]
+    );
+
+    const newOrder = await db.get('SELECT * FROM orders WHERE id = ?', [result.lastID]);
     res.status(201).json(newOrder);
   } catch (error) {
     console.error('Error creating order:', error);
@@ -107,26 +87,27 @@ app.post('/api/orders', (req, res) => {
   }
 });
 
-app.get('/api/banners', (req, res) => {
-  res.json(inMemoryDB.banners);
+app.get('/api/banners', async (req, res) => {
+  try {
+    const banners = await db.all('SELECT * FROM banners ORDER BY createdAt DESC');
+    res.json(banners);
+  } catch (error) {
+    console.error('Error fetching banners:', error);
+    res.status(500).json({ error: 'Failed to fetch banners' });
+  }
 });
 
-app.post('/api/banners', upload.single('image'), (req, res) => {
+app.post('/api/banners', upload.single('image'), async (req, res) => {
   try {
     const { title, description, price, discount, link } = req.body;
-    
-    const newBanner = {
-      id: Date.now(),
-      title,
-      description,
-      price: parseFloat(price),
-      discount: parseFloat(discount),
-      link,
-      image: req.file ? `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}` : null,
-      createdAt: new Date().toISOString()
-    };
-    
-    inMemoryDB.banners.push(newBanner);
+    const image = req.file ? `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}` : null;
+
+    const result = await db.run(
+      'INSERT INTO banners (title, description, price, discount, link, image) VALUES (?, ?, ?, ?, ?, ?)',
+      [title, description, parseFloat(price), parseFloat(discount), link, image]
+    );
+
+    const newBanner = await db.get('SELECT * FROM banners WHERE id = ?', [result.lastID]);
     res.status(201).json(newBanner);
   } catch (error) {
     console.error('Error creating banner:', error);
@@ -135,23 +116,26 @@ app.post('/api/banners', upload.single('image'), (req, res) => {
 });
 
 // Reviews endpoints
-app.get('/api/reviews', (req, res) => {
-  res.json(inMemoryDB.reviews);
+app.get('/api/reviews', async (req, res) => {
+  try {
+    const reviews = await db.all('SELECT * FROM reviews ORDER BY createdAt DESC');
+    res.json(reviews);
+  } catch (error) {
+    console.error('Error fetching reviews:', error);
+    res.status(500).json({ error: 'Failed to fetch reviews' });
+  }
 });
 
-app.post('/api/reviews', (req, res) => {
+app.post('/api/reviews', async (req, res) => {
   try {
     const { name, rating, comment } = req.body;
-    
-    const newReview = {
-      id: Date.now(),
-      name,
-      rating: parseInt(rating),
-      comment,
-      createdAt: new Date().toISOString()
-    };
-    
-    inMemoryDB.reviews.push(newReview);
+
+    const result = await db.run(
+      'INSERT INTO reviews (name, rating, comment) VALUES (?, ?, ?)',
+      [name, parseInt(rating), comment]
+    );
+
+    const newReview = await db.get('SELECT * FROM reviews WHERE id = ?', [result.lastID]);
     res.status(201).json(newReview);
   } catch (error) {
     console.error('Error creating review:', error);
@@ -159,41 +143,38 @@ app.post('/api/reviews', (req, res) => {
   }
 });
 
-app.put('/api/reviews/:id', (req, res) => {
+app.put('/api/reviews/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const { name, rating, comment } = req.body;
-    
-    const reviewIndex = inMemoryDB.reviews.findIndex(review => review.id === parseInt(id));
-    if (reviewIndex === -1) {
+
+    await db.run(
+      'UPDATE reviews SET name = ?, rating = ?, comment = ?, updatedAt = CURRENT_TIMESTAMP WHERE id = ?',
+      [name, parseInt(rating), comment, id]
+    );
+
+    const updatedReview = await db.get('SELECT * FROM reviews WHERE id = ?', [id]);
+    if (!updatedReview) {
       return res.status(404).json({ error: 'Review not found' });
     }
-    
-    inMemoryDB.reviews[reviewIndex] = {
-      ...inMemoryDB.reviews[reviewIndex],
-      name,
-      rating: parseInt(rating),
-      comment,
-      updatedAt: new Date().toISOString()
-    };
-    
-    res.json(inMemoryDB.reviews[reviewIndex]);
+
+    res.json(updatedReview);
   } catch (error) {
     console.error('Error updating review:', error);
     res.status(500).json({ error: 'Failed to update review' });
   }
 });
 
-app.delete('/api/reviews/:id', (req, res) => {
+app.delete('/api/reviews/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const reviewIndex = inMemoryDB.reviews.findIndex(review => review.id === parseInt(id));
+    const review = await db.get('SELECT * FROM reviews WHERE id = ?', [id]);
     
-    if (reviewIndex === -1) {
+    if (!review) {
       return res.status(404).json({ error: 'Review not found' });
     }
-    
-    inMemoryDB.reviews.splice(reviewIndex, 1);
+
+    await db.run('DELETE FROM reviews WHERE id = ?', [id]);
     res.status(204).send();
   } catch (error) {
     console.error('Error deleting review:', error);
@@ -203,7 +184,11 @@ app.delete('/api/reviews/:id', (req, res) => {
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+  res.json({ 
+    status: 'ok', 
+    timestamp: new Date().toISOString(),
+    database: config.nodeEnv === 'production' ? 'in-memory' : 'file-based'
+  });
 });
 
 // Error handling middleware
@@ -217,7 +202,7 @@ export default app;
 
 // For local development
 if (process.env.NODE_ENV !== 'production') {
-  const port = process.env.PORT || 3000;
+  const port = config.port;
   app.listen(port, () => {
     console.log(`Server is running on port ${port}`);
   });
