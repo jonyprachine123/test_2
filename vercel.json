@@ -16,11 +16,11 @@
     "routes": [
         {
             "src": "/api/(.*)",
-            "dest": "server/production-server.js"
+            "dest": "/server/production-server.js"
         },
         {
             "src": "/(.*)",
-            "dest": "/dist/$1"
+            "dest": "/$1"
         }
     ],
     "env": {

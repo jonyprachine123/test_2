@@ -4,7 +4,6 @@ import multer from 'multer';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import fs from 'fs';
-import { config } from './config.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -20,7 +19,11 @@ let inMemoryDB = {
 
 // Load initial data
 try {
-  const initialData = JSON.parse(fs.readFileSync(path.join(__dirname, 'initial-data.json'), 'utf8'));
+  const initialData = {
+    products: [],
+    orders: [],
+    banners: []
+  };
   inMemoryDB = initialData;
 } catch (err) {
   console.error('Error loading initial data:', err);
@@ -28,13 +31,13 @@ try {
 
 // Middleware
 app.use(cors({
-  origin: config.corsOrigin
+  origin: '*',
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
 }));
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
-// Serve static files
-app.use(express.static(path.join(__dirname, '../dist')));
 
 // Configure multer for file uploads
 const storage = multer.memoryStorage();
@@ -51,21 +54,27 @@ app.get('/api/products', (req, res) => {
 });
 
 app.post('/api/products', upload.single('image'), (req, res) => {
-  const { title, description, price, discount } = req.body;
-  const features = JSON.parse(req.body.features || '[]');
-  
-  const newProduct = {
-    id: Date.now(),
-    title,
-    description,
-    price,
-    discount,
-    features,
-    image: req.file ? `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}` : null
-  };
-  
-  inMemoryDB.products.push(newProduct);
-  res.json(newProduct);
+  try {
+    const { title, description, price, discount } = req.body;
+    const features = JSON.parse(req.body.features || '[]');
+    
+    const newProduct = {
+      id: Date.now(),
+      title,
+      description,
+      price: parseFloat(price),
+      discount: parseFloat(discount),
+      features,
+      image: req.file ? `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}` : null,
+      createdAt: new Date().toISOString()
+    };
+    
+    inMemoryDB.products.push(newProduct);
+    res.status(201).json(newProduct);
+  } catch (error) {
+    console.error('Error creating product:', error);
+    res.status(500).json({ error: 'Failed to create product' });
+  }
 });
 
 app.get('/api/orders', (req, res) => {
@@ -73,22 +82,27 @@ app.get('/api/orders', (req, res) => {
 });
 
 app.post('/api/orders', (req, res) => {
-  const { customerName, email, phone, address, productId, quantity } = req.body;
-  
-  const newOrder = {
-    id: Date.now(),
-    customerName,
-    email,
-    phone,
-    address,
-    productId,
-    quantity,
-    status: 'pending',
-    createdAt: new Date().toISOString()
-  };
-  
-  inMemoryDB.orders.push(newOrder);
-  res.json(newOrder);
+  try {
+    const { customerName, email, phone, address, productId, quantity } = req.body;
+    
+    const newOrder = {
+      id: Date.now(),
+      customerName,
+      email,
+      phone,
+      address,
+      productId,
+      quantity: parseInt(quantity),
+      status: 'pending',
+      createdAt: new Date().toISOString()
+    };
+    
+    inMemoryDB.orders.push(newOrder);
+    res.status(201).json(newOrder);
+  } catch (error) {
+    console.error('Error creating order:', error);
+    res.status(500).json({ error: 'Failed to create order' });
+  }
 });
 
 app.get('/api/banners', (req, res) => {
@@ -96,28 +110,46 @@ app.get('/api/banners', (req, res) => {
 });
 
 app.post('/api/banners', upload.single('image'), (req, res) => {
-  const { title, description, price, discount, link } = req.body;
-  
-  const newBanner = {
-    id: Date.now(),
-    title,
-    description,
-    price,
-    discount,
-    link,
-    image: req.file ? `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}` : null
-  };
-  
-  inMemoryDB.banners.push(newBanner);
-  res.json(newBanner);
+  try {
+    const { title, description, price, discount, link } = req.body;
+    
+    const newBanner = {
+      id: Date.now(),
+      title,
+      description,
+      price: parseFloat(price),
+      discount: parseFloat(discount),
+      link,
+      image: req.file ? `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}` : null,
+      createdAt: new Date().toISOString()
+    };
+    
+    inMemoryDB.banners.push(newBanner);
+    res.status(201).json(newBanner);
+  } catch (error) {
+    console.error('Error creating banner:', error);
+    res.status(500).json({ error: 'Failed to create banner' });
+  }
 });
 
-// Serve index.html for all other routes (SPA support)
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, '../dist/index.html'));
+// Health check endpoint
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-const port = process.env.PORT || 3000;
-app.listen(port, () => {
-  console.log(`Server running on port ${port}`);
+// Error handling middleware
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({ error: 'Something went wrong!' });
 });
+
+// For Vercel serverless functions
+export default app;
+
+// For local development
+if (process.env.NODE_ENV !== 'production') {
+  const port = process.env.PORT || 3000;
+  app.listen(port, () => {
+    console.log(`Server running on port ${port}`);
+  });
+}
