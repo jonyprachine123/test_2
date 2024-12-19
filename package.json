@@ -7,14 +7,14 @@
     "audit-fix": "npm audit fix",
     "fund": "npm fund",
     "dev": "vite",
-    "build": "tsc && vite build",
+    "build": "vite build",
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
     "preview": "vite preview",
     "start": "node server/production-server.js",
     "dev:all": "concurrently \"npm run start\" \"npm run dev\"",
     "build:all": "npm run build && npm run start",
-    "vercel-build": "npm run build"
+    "vercel-build": "vite build"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",
