@@ -1,3 +1,5 @@
+/// <reference types="vite/client" />
+
 import { defineConfig, loadEnv } from 'vite'
 import react from '@vitejs/plugin-react'
 import path from 'path'
@@ -26,6 +28,10 @@ export default defineConfig(({ mode }) => {
     build: {
       outDir: 'dist',
       sourcemap: false,
+      target: 'esnext',
+      commonjsOptions: {
+        transformMixedEsModules: true,
+      },
     },
     define: {
       'import.meta.env.VITE_VERCEL_URL': JSON.stringify(env.VITE_VERCEL_URL),
