@@ -7,6 +7,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
+import endpoints from "@/config/endpoints";
 
 interface Review {
   id: number;
@@ -27,7 +28,7 @@ export default function Reviews() {
 
   const fetchReviews = async () => {
     try {
-      const response = await fetch("http://localhost:5000/api/reviews");
+      const response = await fetch(endpoints.reviews.list);
       if (!response.ok) {
         throw new Error("Failed to fetch reviews");
       }
@@ -37,7 +38,7 @@ export default function Reviews() {
       console.error("Error fetching reviews:", error);
       toast({
         title: "Error",
-        description: "Failed to fetch reviews",
+        description: "Failed to load reviews",
         variant: "destructive",
       });
     } finally {

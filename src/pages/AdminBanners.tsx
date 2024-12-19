@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { Trash2 } from "lucide-react";
 import { useRef } from "react";
+import endpoints from "@/config/endpoints";
 
 interface Banner {
   id: number;
@@ -31,6 +32,7 @@ export default function AdminBanners() {
   const [discount, setDiscount] = useState("");
   const [link, setLink] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [loading, setLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -41,7 +43,8 @@ export default function AdminBanners() {
 
   const fetchBanners = async () => {
     try {
-      const response = await fetch("http://localhost:5000/api/banners");
+      setLoading(true);
+      const response = await fetch(endpoints.banners.list);
       if (!response.ok) {
         throw new Error("Failed to fetch banners");
       }
@@ -54,6 +57,8 @@ export default function AdminBanners() {
         description: "Failed to load banners",
         variant: "destructive",
       });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -141,7 +146,7 @@ export default function AdminBanners() {
         image: image?.name
       });
 
-      const response = await fetch("http://localhost:5000/api/banners", {
+      const response = await fetch(endpoints.banners.create, {
         method: "POST",
         body: formData,
       });
@@ -193,7 +198,7 @@ export default function AdminBanners() {
     }
 
     try {
-      const response = await fetch(`http://localhost:5000/api/banners/${id}`, {
+      const response = await fetch(endpoints.banners.delete(id), {
         method: "DELETE",
       });
 
@@ -373,14 +378,14 @@ export default function AdminBanners() {
                 className="bg-white p-4 rounded-lg shadow-md flex items-start gap-4"
               >
                 <img
-                  src={banner.imageUrl || (banner.image ? `http://localhost:5000${banner.image}` : '/placeholder-image.jpg')}
+                  src={banner.imageUrl || (banner.image ? `${endpoints.baseUrl}${banner.image}` : '/placeholder-image.jpg')}
                   alt={banner.title}
                   className="w-24 h-24 object-cover rounded"
                   onError={(e) => {
                     const img = e.target as HTMLImageElement;
                     if (banner.image && !banner.imageUrl) {
                       // Try the local image if URL fails
-                      img.src = `http://localhost:5000${banner.image}`;
+                      img.src = `${endpoints.baseUrl}${banner.image}`;
                     } else {
                       // Fall back to placeholder
                       img.src = '/placeholder-image.jpg';

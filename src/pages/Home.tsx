@@ -5,6 +5,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import Reviews from "@/components/Reviews";
+import endpoints from "@/config/endpoints";
 
 const Home = () => {
   const { toast } = useToast();
@@ -26,7 +27,7 @@ const Home = () => {
 
   const fetchProducts = async () => {
     try {
-      const response = await fetch("http://localhost:5000/api/products");
+      const response = await fetch(endpoints.products.list);
       const data = await response.json();
       console.log('Fetched products:', data);
       setProducts(data);
@@ -115,8 +116,7 @@ const Home = () => {
     try {
       const finalPrice = calculateDiscountedPrice(selectedProduct.price, selectedProduct.discount);
 
-      // Create order in SQLite database
-      const response = await fetch('http://localhost:5000/api/orders', {
+      const response = await fetch(endpoints.orders.create, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import endpoints from "@/config/endpoints";
 
 interface Banner {
   id: number;
@@ -26,7 +27,7 @@ export default function BannerPage() {
 
   const fetchBanners = async () => {
     try {
-      const response = await fetch("http://localhost:5000/api/banners");
+      const response = await fetch(endpoints.banners.list);
       if (!response.ok) {
         throw new Error("Failed to fetch banners");
       }
@@ -49,8 +50,7 @@ export default function BannerPage() {
 
   const getImageUrl = (imagePath: string) => {
     if (!imagePath) return '';
-    if (imagePath.startsWith('http')) return imagePath;
-    return `http://localhost:5000${imagePath}`;
+    return `${endpoints.baseUrl}${imagePath}`;
   };
 
   return (

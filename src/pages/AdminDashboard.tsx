@@ -9,6 +9,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { Label } from "@/components/ui/label";
 import AdminReviews from "@/components/AdminReviews";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
+import endpoints from "@/config/endpoints";
 
 export default function AdminDashboard() {
   const { isAuthenticated, logout } = useAdmin();
@@ -64,14 +65,17 @@ export default function AdminDashboard() {
 
   const fetchProducts = async () => {
     try {
-      const response = await fetch("http://localhost:5000/api/products");
+      const response = await fetch(endpoints.products.list);
+      if (!response.ok) {
+        throw new Error("Failed to fetch products");
+      }
       const data = await response.json();
       setProducts(data);
     } catch (error) {
       console.error("Error fetching products:", error);
       toast({
         title: "Error",
-        description: "Failed to fetch products",
+        description: "Failed to load products",
         variant: "destructive",
       });
     }
@@ -79,14 +83,17 @@ export default function AdminDashboard() {
 
   const fetchOrders = async () => {
     try {
-      const response = await fetch("http://localhost:5000/api/orders");
+      const response = await fetch(endpoints.orders.list);
+      if (!response.ok) {
+        throw new Error("Failed to fetch orders");
+      }
       const data = await response.json();
       setOrders(data);
     } catch (error) {
       console.error("Error fetching orders:", error);
       toast({
         title: "Error",
-        description: "Failed to fetch orders",
+        description: "Failed to load orders",
         variant: "destructive",
       });
     }
@@ -94,14 +101,17 @@ export default function AdminDashboard() {
 
   const fetchBanners = async () => {
     try {
-      const response = await fetch("http://localhost:5000/api/banners");
+      const response = await fetch(endpoints.banners.list);
+      if (!response.ok) {
+        throw new Error("Failed to fetch banners");
+      }
       const data = await response.json();
       setBanners(data);
     } catch (error) {
       console.error("Error fetching banners:", error);
       toast({
         title: "Error",
-        description: "Failed to fetch banners",
+        description: "Failed to load banners",
         variant: "destructive",
       });
     }
@@ -110,7 +120,7 @@ export default function AdminDashboard() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const response = await fetch("http://localhost:5000/api/admin/login", {
+      const response = await fetch(endpoints.admin.login, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -143,8 +153,8 @@ export default function AdminDashboard() {
     setLoading(true);
     try {
       const url = productData.id
-        ? `http://localhost:5000/api/products/${productData.id}`
-        : "http://localhost:5000/api/products";
+        ? endpoints.products.update(productData.id)
+        : endpoints.products.create;
 
       const method = productData.id ? "PUT" : "POST";
 
@@ -210,7 +220,7 @@ export default function AdminDashboard() {
     }
 
     try {
-      const response = await fetch(`http://localhost:5000/api/products/${id}`, {
+      const response = await fetch(endpoints.products.delete(id), {
         method: "DELETE",
       });
 
@@ -286,7 +296,7 @@ export default function AdminDashboard() {
 
   const handleUpdateOrderStatus = async (orderId: string, newStatus: string) => {
     try {
-      const response = await fetch(`http://localhost:5000/api/orders/${orderId}`, {
+      const response = await fetch(endpoints.orders.update(orderId), {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -320,7 +330,7 @@ export default function AdminDashboard() {
     }
 
     try {
-      const response = await fetch(`http://localhost:5000/api/orders/${orderId}`, {
+      const response = await fetch(endpoints.orders.delete(orderId), {
         method: "DELETE",
       });
 
@@ -350,7 +360,7 @@ export default function AdminDashboard() {
     }
 
     try {
-      const response = await fetch(`http://localhost:5000/api/banners/${id}`, {
+      const response = await fetch(endpoints.banners.delete(id), {
         method: "DELETE",
       });
 
@@ -377,7 +387,7 @@ export default function AdminDashboard() {
   const handleAddBanner = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const response = await fetch("http://localhost:5000/api/banners", {
+      const response = await fetch(endpoints.banners.create, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -431,7 +441,7 @@ export default function AdminDashboard() {
 
   const handleUpdateOrder = async (orderId: string, formData: any) => {
     try {
-      const response = await fetch(`http://localhost:5000/api/orders/${orderId}`, {
+      const response = await fetch(endpoints.orders.update(orderId), {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",

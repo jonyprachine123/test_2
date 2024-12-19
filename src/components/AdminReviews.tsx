@@ -18,6 +18,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import endpoints from "@/config/endpoints";
 
 interface Review {
   id: number;
@@ -43,7 +44,8 @@ export default function AdminReviews() {
 
   const fetchReviews = async () => {
     try {
-      const response = await fetch("http://localhost:5000/api/reviews");
+      setLoading(true);
+      const response = await fetch(endpoints.reviews.list);
       if (!response.ok) {
         throw new Error("Failed to fetch reviews");
       }
@@ -53,7 +55,7 @@ export default function AdminReviews() {
       console.error("Error fetching reviews:", error);
       toast({
         title: "Error",
-        description: "Failed to fetch reviews",
+        description: "Failed to load reviews",
         variant: "destructive",
       });
     } finally {
@@ -65,7 +67,7 @@ export default function AdminReviews() {
     e.preventDefault();
 
     try {
-      const response = await fetch("http://localhost:5000/api/reviews", {
+      const response = await fetch(endpoints.reviews.create, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -109,7 +111,7 @@ export default function AdminReviews() {
     }
 
     try {
-      const response = await fetch(`http://localhost:5000/api/reviews/${id}`, {
+      const response = await fetch(endpoints.reviews.delete(id), {
         method: "DELETE",
       });
 

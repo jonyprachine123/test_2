@@ -26,6 +26,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import endpoints from "@/config/endpoints";
 
 interface Order {
   id: string;
@@ -70,18 +71,17 @@ export default function AdminOrders() {
   const fetchOrders = async () => {
     try {
       setLoading(true);
-      const response = await fetch('http://localhost:5000/api/orders');
+      const response = await fetch(endpoints.orders.list);
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        throw new Error("Failed to fetch orders");
       }
       const data = await response.json();
-      console.log('Fetched orders:', data); // Debug log
       setOrders(data);
     } catch (error) {
-      console.error('Error fetching orders:', error);
+      console.error("Error fetching orders:", error);
       toast({
         title: "Error",
-        description: "Failed to fetch orders: " + (error as Error).message,
+        description: "Failed to load orders",
         variant: "destructive",
       });
     } finally {
@@ -91,11 +91,19 @@ export default function AdminOrders() {
 
   const fetchProducts = async () => {
     try {
-      const response = await fetch("http://localhost:5000/api/products");
+      const response = await fetch(endpoints.products.list);
+      if (!response.ok) {
+        throw new Error("Failed to fetch products");
+      }
       const data = await response.json();
       setProducts(data);
     } catch (error) {
       console.error("Error fetching products:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load products",
+        variant: "destructive",
+      });
     }
   };
 
@@ -122,7 +130,7 @@ export default function AdminOrders() {
         editingOrder.total_price = finalPrice * editingOrder.quantity;
       }
 
-      const response = await fetch(`http://localhost:5000/api/orders/${editingOrder.id}`, {
+      const response = await fetch(endpoints.orders.update(editingOrder.id), {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -175,7 +183,7 @@ export default function AdminOrders() {
         )
       );
 
-      const response = await fetch(`http://localhost:5000/api/orders/${orderId}`, {
+      const response = await fetch(endpoints.orders.update(orderId), {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -224,7 +232,7 @@ export default function AdminOrders() {
       setLoading(true);
       console.log('Deleting order:', orderId);
       
-      const response = await fetch(`http://localhost:5000/api/orders/${orderId}`, {
+      const response = await fetch(endpoints.orders.delete(orderId), {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json'
