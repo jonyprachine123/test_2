@@ -36,5 +36,4 @@ export const endpoints = {
   },
 };
 
-// Default export for backward compatibility
 export default endpoints;
