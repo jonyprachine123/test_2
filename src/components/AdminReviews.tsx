@@ -18,7 +18,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { endpoints } from "@/config/api";
+import { endpoints } from "@/config/api.ts";
 
 interface Review {
   id: number;

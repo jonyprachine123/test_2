@@ -7,7 +7,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
-import { endpoints } from "@/config/api";
+import { endpoints } from "@/config/api.ts";
 
 interface Review {
   id: number;

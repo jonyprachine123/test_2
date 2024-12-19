@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { endpoints } from "@/config/api";
+import { endpoints } from "@/config/api.ts";
 
 interface Banner {
   id: number;
