@@ -14,7 +14,8 @@ const app = express();
 let inMemoryDB = {
   products: [],
   orders: [],
-  banners: []
+  banners: [],
+  reviews: []
 };
 
 // Load initial data
@@ -22,7 +23,8 @@ try {
   const initialData = {
     products: [],
     orders: [],
-    banners: []
+    banners: [],
+    reviews: []
   };
   inMemoryDB = initialData;
 } catch (err) {
@@ -132,6 +134,73 @@ app.post('/api/banners', upload.single('image'), (req, res) => {
   }
 });
 
+// Reviews endpoints
+app.get('/api/reviews', (req, res) => {
+  res.json(inMemoryDB.reviews);
+});
+
+app.post('/api/reviews', (req, res) => {
+  try {
+    const { name, rating, comment } = req.body;
+    
+    const newReview = {
+      id: Date.now(),
+      name,
+      rating: parseInt(rating),
+      comment,
+      createdAt: new Date().toISOString()
+    };
+    
+    inMemoryDB.reviews.push(newReview);
+    res.status(201).json(newReview);
+  } catch (error) {
+    console.error('Error creating review:', error);
+    res.status(500).json({ error: 'Failed to create review' });
+  }
+});
+
+app.put('/api/reviews/:id', (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, rating, comment } = req.body;
+    
+    const reviewIndex = inMemoryDB.reviews.findIndex(review => review.id === parseInt(id));
+    if (reviewIndex === -1) {
+      return res.status(404).json({ error: 'Review not found' });
+    }
+    
+    inMemoryDB.reviews[reviewIndex] = {
+      ...inMemoryDB.reviews[reviewIndex],
+      name,
+      rating: parseInt(rating),
+      comment,
+      updatedAt: new Date().toISOString()
+    };
+    
+    res.json(inMemoryDB.reviews[reviewIndex]);
+  } catch (error) {
+    console.error('Error updating review:', error);
+    res.status(500).json({ error: 'Failed to update review' });
+  }
+});
+
+app.delete('/api/reviews/:id', (req, res) => {
+  try {
+    const { id } = req.params;
+    const reviewIndex = inMemoryDB.reviews.findIndex(review => review.id === parseInt(id));
+    
+    if (reviewIndex === -1) {
+      return res.status(404).json({ error: 'Review not found' });
+    }
+    
+    inMemoryDB.reviews.splice(reviewIndex, 1);
+    res.status(204).send();
+  } catch (error) {
+    console.error('Error deleting review:', error);
+    res.status(500).json({ error: 'Failed to delete review' });
+  }
+});
+
 // Health check endpoint
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
@@ -150,6 +219,6 @@ export default app;
 if (process.env.NODE_ENV !== 'production') {
   const port = process.env.PORT || 3000;
   app.listen(port, () => {
-    console.log(`Server running on port ${port}`);
+    console.log(`Server is running on port ${port}`);
   });
 }
